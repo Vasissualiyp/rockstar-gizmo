@@ -22,6 +22,47 @@
 
 #define AREPO_NTYPES 6
 
+
+void gizmo_readmass_data(hid_t HDF_FileID, char *filename, float *massTable) {
+    int64_t to_read = 5; // Number of elements to read
+    int64_t stride = 1;  // Stride for reading elements
+    hid_t type = H5T_NATIVE_FLOAT; // Data type of the elements
+
+    float buffer[to_read]; // Buffer to store the read elements
+
+    hid_t HDF_GroupID = check_H5Gopen(HDF_FileID, "PartType1", filename);
+    hid_t HDF_DatasetID = check_H5Dopen(HDF_GroupID, "Masses", "PartType1", filename);
+    hid_t HDF_DataspaceID = check_H5Dget_space(HDF_DatasetID);
+
+    hsize_t start = 0;  // start index
+    hsize_t count = to_read;  // block count
+    H5Sselect_hyperslab(HDF_DataspaceID, H5S_SELECT_SET, &start, NULL, &count, NULL);
+
+    hid_t HDF_MemspaceID = H5Screate_simple(1, &count, NULL);
+    //check_H5Dread(HDF_DatasetID, type, HDF_MemspaceID, HDF_DataspaceID, H5P_DEFAULT, buffer);
+    if(H5Dread(HDF_DatasetID, type, HDF_MemspaceID, HDF_DataspaceID, H5P_DEFAULT, buffer) < 0) {
+        fprintf(stderr, "Failed to read dataset.\n");
+        exit(1);
+    }
+
+
+    H5Sclose(HDF_MemspaceID);
+    H5Sclose(HDF_DataspaceID);
+    H5Dclose(HDF_DatasetID);
+    H5Gclose(HDF_GroupID);
+
+    // Check if all masses are the same
+    for (int i = 1; i < to_read; ++i) {
+        if (buffer[0] != buffer[i]) {
+            fprintf(stderr, "Different DM masses are not implemented.\n");
+            exit(1);
+        }
+    }
+
+    // If all masses are the same, set the mass table for DM particle type
+    massTable[AREPO_DM_PARTTYPE] = buffer[0];
+}
+
 void arepo_read_dataset(hid_t HDF_FileID, char *filename, char *gid, char *dataid, struct particle *p, int64_t to_read, int64_t offset, int64_t stride, hid_t type) {
   int64_t width = (type == H5T_NATIVE_LLONG) ? 8 : 4;
   void *buffer = check_malloc_s(buffer, to_read, width*stride);
@@ -90,7 +131,6 @@ void arepo_readheader_array(hid_t HDF_GroupID, char *filename, char *objName, hi
   
   check_H5Aread(HDF_AttrID, type, data, objName, gid, filename);
 
-  H5Sclose(HDF_DataspaceID);
   H5Aclose(HDF_AttrID);
 }
 
@@ -111,26 +151,40 @@ void load_particles_arepo(char *filename, struct particle **p, int64_t *num_p)
   hid_t HDF_FileID = check_H5Fopen(filename, H5F_ACC_RDONLY);
   hid_t HDF_Header = check_H5Gopen(HDF_FileID, "Header", filename);
   
-  Ol = arepo_readheader_float(HDF_Header, filename, "OmegaLambda");
-  Om = arepo_readheader_float(HDF_Header, filename, "Omega0");
-  h0 = arepo_readheader_float(HDF_Header, filename, "HubbleParam");
-  SCALE_NOW = arepo_readheader_float(HDF_Header, filename, "Time");
+  //Ol = arepo_readheader_float(HDF_Header, filename, "OmegaLambda");
+  //Om = arepo_readheader_float(HDF_Header, filename, "Omega0");
+  //h0 = arepo_readheader_float(HDF_Header, filename, "HubbleParam");
+  //SCALE_NOW = arepo_readheader_float(HDF_Header, filename, "Time");
+  //BOX_SIZE = arepo_readheader_float(HDF_Header, filename, "BoxSize");
+  //BOX_SIZE *= AREPO_LENGTH_CONVERSION;  
+
+  Ol = arepo_readheader_float(HDF_Header, filename, "Omega_Lambda");
+  Om = arepo_readheader_float(HDF_Header, filename, "Omega_Matter");       uint32_t npart_low[AREPO_NTYPES], npart_high[AREPO_NTYPES] = {0};
+  h0 = arepo_readheader_float(HDF_Header, filename, "HubbleParam");  int64_t npart[AREPO_NTYPES];
+  SCALE_NOW = arepo_readheader_float(HDF_Header, filename, "Time");  float massTable[AREPO_NTYPES];
   BOX_SIZE = arepo_readheader_float(HDF_Header, filename, "BoxSize");
-  BOX_SIZE *= AREPO_LENGTH_CONVERSION;  
-  
-  uint32_t npart_low[AREPO_NTYPES], npart_high[AREPO_NTYPES] = {0};
-  int64_t npart[AREPO_NTYPES];
-  float massTable[AREPO_NTYPES];
-  
-  arepo_readheader_array(HDF_Header, filename, "NumPart_ThisFile", H5T_NATIVE_UINT64, npart);
+  BOX_SIZE *= AREPO_LENGTH_CONVERSION;                               arepo_readheader_array(HDF_Header, filename, "NumPart_ThisFile", H5T_NATIVE_UINT64, npart);
+
   arepo_readheader_array(HDF_Header, filename, "NumPart_Total_HighWord", H5T_NATIVE_UINT32, npart_high);
   arepo_readheader_array(HDF_Header, filename, "NumPart_Total", H5T_NATIVE_UINT32, npart_low);
   arepo_readheader_array(HDF_Header, filename, "MassTable", H5T_NATIVE_FLOAT, massTable);
+  //arepo_readheader_array(HDF_Header, filename, "Masses", H5T_NATIVE_FLOAT, massTable);
   
   TOTAL_PARTICLES = ( ((int64_t)npart_high[AREPO_DM_PARTTYPE]) << 32 ) 
     + (int64_t)npart_low[AREPO_DM_PARTTYPE];
   
   H5Gclose(HDF_Header);
+  // Check if the massTable entry for DM particles is zero
+  if (massTable[AREPO_DM_PARTTYPE] == 0.0f) {
+      // Call the new function to read "Masses" dataset and update massTable
+      gizmo_readmass_data(HDF_FileID, filename, massTable);
+  
+      // Now massTable[AREPO_DM_PARTTYPE] should be updated with the correct mass
+      if (massTable[AREPO_DM_PARTTYPE] == 0.0f) {
+          fprintf(stderr, "Mass for DM particles is still zero after reading 'Masses' dataset.\n");
+          exit(1);
+      }
+  }
     
   PARTICLE_MASS   = massTable[AREPO_DM_PARTTYPE] * AREPO_MASS_CONVERSION;
   AVG_PARTICLE_SPACING = cbrt(PARTICLE_MASS / (Om*CRITICAL_DENSITY));
