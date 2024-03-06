@@ -1,6 +1,8 @@
 CFLAGS=-m64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_BSD_SOURCE -D_POSIX_SOURCE -D_POSIX_C_SOURCE=200809L -D_SVID_SOURCE -D_DARWIN_C_SOURCE -Wall -fno-math-errno -fPIC
 CFLAGS += -I/usr/include/tirpc
+CFLAGS += -I/usr/include/tirpc
 LDFLAGS=-shared
+OFLAGS += -ltirpc
 OFLAGS = -lm -O3 -std=c99 -rdynamic -g
 OFLAGS += -ltirpc
 DEBUGFLAGS = -lm -g -O0 -std=c99 -rdynamic
@@ -8,7 +10,9 @@ PROFFLAGS = -lm -g -pg -O2 -std=c99
 #CC = gcc
 CFILES = rockstar.c check_syscalls.c fof.c groupies.c subhalo_metric.c potential.c nfw.c jacobi.c fun_times.c interleaving.c universe_time.c hubble.c integrate.c distance.c config_vars.c config.c bounds.c inthash.c io/read_config.c client.c server.c merger.c inet/socket.c inet/rsocket.c inet/address.c io/meta_io.c io/io_internal.c io/io_ascii.c io/stringparse.c io/io_gadget.c io/io_generic.c io/io_art.c io/io_tipsy.c io/io_bgc2.c io/io_util.c io/io_arepo.c io/io_hdf5.c
 DIST_FLAGS =
-HDF5_FLAGS = -DH5_USE_16_API -lhdf5 -DENABLE_HDF5 -I/opt/local/include -L/opt/local/lib
+#HDF5_FLAGS = -DH5_USE_16_API -lhdf5 -DENABLE_HDF5 -I/opt/local/include -L/opt/local/lib
+HDF5_FLAGS = -DH5_USE_16_API -lhdf5 -DENABLE_HDF5 -I/cita/modules/hdf5/1.12.1/include -L/cita/modules/hdf5/1.12.1/lib
+
 
 all:
 	@make reg EXTRA_FLAGS="$(OFLAGS)"
