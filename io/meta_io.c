@@ -74,7 +74,7 @@ void get_input_filename(char *buffer, int maxlen, int64_t snap, int64_t block) {
 	      !strncasecmp(FILE_FORMAT, "LGADGET", 7) ||
 	      !strncasecmp(FILE_FORMAT, "AREPO", 5) ||
 	      !strncasecmp(FILE_FORMAT, "GIZMO", 5) ||
-	      !strncasecmp(FILE_FORMAT, "GIZMO_OLD", 5))
+	      !strncasecmp(FILE_FORMAT, "OGIZM", 5))
 	    snprintf(buffer+out, maxlen-out, "%03"PRId64, snap);
 	  else snprintf(buffer+out, maxlen-out, "%"PRId64, snap);
 	}
@@ -141,11 +141,11 @@ void read_particles(char *filename) {
     exit(1);
 #endif
   }
-  else if (!strncasecmp(FILE_FORMAT, "GIZMO_OLD", 5)) {
+  else if (!strncasecmp(FILE_FORMAT, "OGIZM", 5)) {
 #ifdef ENABLE_HDF5
     load_particles_gizmo_old(filename, &p, &num_p);
 #else
-    fprintf(stderr, "[Error] GIZMO_OLD needs HDF5 support.  Recompile Rockstar using \"make with_hdf5\".\n");
+    fprintf(stderr, "[Error] OGIZM needs HDF5 support.  Recompile Rockstar using \"make with_hdf5\".\n");
     exit(1);
 #endif
   }
