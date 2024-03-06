@@ -159,9 +159,12 @@ void load_particles_arepo(char *filename, struct particle **p, int64_t *num_p)
   //BOX_SIZE *= AREPO_LENGTH_CONVERSION;  
 
   Ol = arepo_readheader_float(HDF_Header, filename, "Omega_Lambda");
-  Om = arepo_readheader_float(HDF_Header, filename, "Omega_Matter");       uint32_t npart_low[AREPO_NTYPES], npart_high[AREPO_NTYPES] = {0};
-  h0 = arepo_readheader_float(HDF_Header, filename, "HubbleParam");  int64_t npart[AREPO_NTYPES];
-  SCALE_NOW = arepo_readheader_float(HDF_Header, filename, "Time");  float massTable[AREPO_NTYPES];
+  Om = arepo_readheader_float(HDF_Header, filename, "Omega_Matter");       
+  uint32_t npart_low[AREPO_NTYPES], npart_high[AREPO_NTYPES] = {0};
+  h0 = arepo_readheader_float(HDF_Header, filename, "HubbleParam");  
+  int64_t npart[AREPO_NTYPES];
+  SCALE_NOW = arepo_readheader_float(HDF_Header, filename, "Time");  
+  float massTable[AREPO_NTYPES];
   BOX_SIZE = arepo_readheader_float(HDF_Header, filename, "BoxSize");
   BOX_SIZE *= AREPO_LENGTH_CONVERSION;                               arepo_readheader_array(HDF_Header, filename, "NumPart_ThisFile", H5T_NATIVE_UINT64, npart);
 
