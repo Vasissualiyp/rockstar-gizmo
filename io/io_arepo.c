@@ -23,7 +23,7 @@
 #define AREPO_NTYPES 6
 
 
-void gizmo_readmass_data(hid_t HDF_FileID, char *filename, float *massTable) {
+void arepo_readmass_data(hid_t HDF_FileID, char *filename, float *massTable) {
     int64_t to_read = 5; // Number of elements to read
     int64_t stride = 1;  // Stride for reading elements
     hid_t type = H5T_NATIVE_FLOAT; // Data type of the elements
@@ -180,7 +180,7 @@ void load_particles_arepo(char *filename, struct particle **p, int64_t *num_p)
   // Check if the massTable entry for DM particles is zero
   if (massTable[AREPO_DM_PARTTYPE] == 0.0f) {
       // Call the new function to read "Masses" dataset and update massTable
-      gizmo_readmass_data(HDF_FileID, filename, massTable);
+      arepo_readmass_data(HDF_FileID, filename, massTable);
   
       // Now massTable[AREPO_DM_PARTTYPE] should be updated with the correct mass
       if (massTable[AREPO_DM_PARTTYPE] == 0.0f) {
