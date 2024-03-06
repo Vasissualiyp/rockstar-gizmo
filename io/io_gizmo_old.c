@@ -20,7 +20,7 @@
 #include "../config.h"
 #include "../particle.h"
 
-#define GIZMO_NTYPES 6
+#define GIZMO_OLD_NTYPES 6
 
 
 void gizmo_old_readmass_data(hid_t HDF_FileID, char *filename, float *massTable) {
@@ -60,7 +60,7 @@ void gizmo_old_readmass_data(hid_t HDF_FileID, char *filename, float *massTable)
     }
 
     // If all masses are the same, set the mass table for DM particle type
-    massTable[GIZMO_DM_PARTTYPE] = buffer[0];
+    massTable[GIZMO_OLD_DM_PARTTYPE] = buffer[0];
 }
 
 void gizmo_old_read_dataset(hid_t HDF_FileID, char *filename, char *gid, char *dataid, struct particle *p, int64_t to_read, int64_t offset, int64_t stride, hid_t type) {
@@ -127,7 +127,7 @@ void gizmo_old_readheader_array(hid_t HDF_GroupID, char *filename, char *objName
   assert(ndims == 1);
   hsize_t dimsize = 0;
   check_H5Sget_simple_extent_dims(HDF_DataspaceID, &dimsize);
-  assert(dimsize == GIZMO_NTYPES);
+  assert(dimsize == GIZMO_OLD_NTYPES);
   
   check_H5Aread(HDF_AttrID, type, data, objName, gid, filename);
 
@@ -140,7 +140,7 @@ void gizmo_old_rescale_particles(struct particle *p, int64_t p_start, int64_t ne
 	
   for (int64_t i=0; i<nelems; i++) {
     for (int64_t j=0; j<3; j++) {
-      p[p_start+i].pos[j]   *= GIZMO_LENGTH_CONVERSION;
+      p[p_start+i].pos[j]   *= GIZMO_OLD_LENGTH_CONVERSION;
       p[p_start+i].pos[j+3] *= vel_rescale;
     }
   }
@@ -152,68 +152,68 @@ void load_particles_gizmo_old(char *filename, struct particle **p, int64_t *num_
   hid_t HDF_Header = check_H5Gopen(HDF_FileID, "Header", filename);
   
   Ol = gizmo_old_readheader_float(HDF_Header, filename, "OmegaLambda");
-  Om = gizmo_old_readheader_float(HDF_Header, filename, "Omega0");          uint32_t npart_low[GIZMO_NTYPES], npart_high[GIZMO_NTYPES] = {0};  
-  h0 = gizmo_old_readheader_float(HDF_Header, filename, "HubbleParam");     int64_t npart[GIZMO_NTYPES];
-  SCALE_NOW = gizmo_old_readheader_float(HDF_Header, filename, "Time");     float massTable[GIZMO_NTYPES];
+  Om = gizmo_old_readheader_float(HDF_Header, filename, "Omega0");          uint32_t npart_low[GIZMO_OLD_NTYPES], npart_high[GIZMO_OLD_NTYPES] = {0};  
+  h0 = gizmo_old_readheader_float(HDF_Header, filename, "HubbleParam");     int64_t npart[GIZMO_OLD_NTYPES];
+  SCALE_NOW = gizmo_old_readheader_float(HDF_Header, filename, "Time");     float massTable[GIZMO_OLD_NTYPES];
   BOX_SIZE = gizmo_old_readheader_float(HDF_Header, filename, "BoxSize");
-  BOX_SIZE *= GIZMO_LENGTH_CONVERSION;      gizmo_old_readheader_array(HDF_Header, filename, "NumPart_ThisFile", H5T_NATIVE_UINT64, npart);
+  BOX_SIZE *= GIZMO_OLD_LENGTH_CONVERSION;      gizmo_old_readheader_array(HDF_Header, filename, "NumPart_ThisFile", H5T_NATIVE_UINT64, npart);
 
 
   //Ol = gizmo_old_readheader_float(HDF_Header, filename, "Omega_Lambda");
-  //Om = gizmo_old_readheader_float(HDF_Header, filename, "Omega_Matter"); uint32_t npart_low[GIZMO_NTYPES], npart_high[GIZMO_NTYPES] = {0};
-  //h0 = gizmo_old_readheader_float(HDF_Header, filename, "HubbleParam");  int64_t npart[GIZMO_NTYPES];
-  //SCALE_NOW = gizmo_old_readheader_float(HDF_Header, filename, "Time");  float massTable[GIZMO_NTYPES];
+  //Om = gizmo_old_readheader_float(HDF_Header, filename, "Omega_Matter"); uint32_t npart_low[GIZMO_OLD_NTYPES], npart_high[GIZMO_OLD_NTYPES] = {0};
+  //h0 = gizmo_old_readheader_float(HDF_Header, filename, "HubbleParam");  int64_t npart[GIZMO_OLD_NTYPES];
+  //SCALE_NOW = gizmo_old_readheader_float(HDF_Header, filename, "Time");  float massTable[GIZMO_OLD_NTYPES];
   //BOX_SIZE = gizmo_old_readheader_float(HDF_Header, filename, "BoxSize");
-  //BOX_SIZE *= GIZMO_LENGTH_CONVERSION;    gizmo_old_readheader_array(HDF_Header, filename, "NumPart_ThisFile", H5T_NATIVE_UINT64, npart);
+  //BOX_SIZE *= GIZMO_OLD_LENGTH_CONVERSION;    gizmo_old_readheader_array(HDF_Header, filename, "NumPart_ThisFile", H5T_NATIVE_UINT64, npart);
 
   gizmo_old_readheader_array(HDF_Header, filename, "NumPart_Total_HighWord", H5T_NATIVE_UINT32, npart_high);
   gizmo_old_readheader_array(HDF_Header, filename, "NumPart_Total", H5T_NATIVE_UINT32, npart_low);
   gizmo_old_readheader_array(HDF_Header, filename, "MassTable", H5T_NATIVE_FLOAT, massTable);
   //gizmo_old_readheader_array(HDF_Header, filename, "Masses", H5T_NATIVE_FLOAT, massTable);
   
-  TOTAL_PARTICLES = ( ((int64_t)npart_high[GIZMO_DM_PARTTYPE]) << 32 ) 
-    + (int64_t)npart_low[GIZMO_DM_PARTTYPE];
+  TOTAL_PARTICLES = ( ((int64_t)npart_high[GIZMO_OLD_DM_PARTTYPE]) << 32 ) 
+    + (int64_t)npart_low[GIZMO_OLD_DM_PARTTYPE];
   
   H5Gclose(HDF_Header);
   // Check if the massTable entry for DM particles is zero
-  if (massTable[GIZMO_DM_PARTTYPE] == 0.0f) {
+  if (massTable[GIZMO_OLD_DM_PARTTYPE] == 0.0f) {
       // Call the new function to read "Masses" dataset and update massTable
       gizmo_old_readmass_data(HDF_FileID, filename, massTable);
   
-      // Now massTable[GIZMO_DM_PARTTYPE] should be updated with the correct mass
-      if (massTable[GIZMO_DM_PARTTYPE] == 0.0f) {
+      // Now massTable[GIZMO_OLD_DM_PARTTYPE] should be updated with the correct mass
+      if (massTable[GIZMO_OLD_DM_PARTTYPE] == 0.0f) {
           fprintf(stderr, "Mass for DM particles is still zero after reading 'Masses' dataset.\n");
           exit(1);
       }
   }
     
-  PARTICLE_MASS   = massTable[GIZMO_DM_PARTTYPE] * GIZMO_MASS_CONVERSION;
+  PARTICLE_MASS   = massTable[GIZMO_OLD_DM_PARTTYPE] * GIZMO_OLD_MASS_CONVERSION;
   AVG_PARTICLE_SPACING = cbrt(PARTICLE_MASS / (Om*CRITICAL_DENSITY));
 	
   if(RESCALE_PARTICLE_MASS)
     PARTICLE_MASS = Om*CRITICAL_DENSITY * pow(BOX_SIZE, 3) / TOTAL_PARTICLES;
  
-  printf("GIZMO: filename:       %s\n", filename);
-  printf("GIZMO: box size:       %g Mpc/h\n", BOX_SIZE);
-  printf("GIZMO: h0:             %g\n", h0);
-  printf("GIZMO: scale factor:   %g\n", SCALE_NOW);
-  printf("GIZMO: Total DM Part:  %" PRIu64 "\n", TOTAL_PARTICLES);
-  printf("GIZMO: ThisFile DM Part: %" PRIu64 "\n", npart[GIZMO_DM_PARTTYPE]);
-  printf("GIZMO: DM Part Mass:   %g Msun/h\n", PARTICLE_MASS);
-  printf("GIZMO: avgPartSpacing: %g Mpc/h\n\n", AVG_PARTICLE_SPACING);
+  printf("GIZMO_OLD: filename:       %s\n", filename);
+  printf("GIZMO_OLD: box size:       %g Mpc/h\n", BOX_SIZE);
+  printf("GIZMO_OLD: h0:             %g\n", h0);
+  printf("GIZMO_OLD: scale factor:   %g\n", SCALE_NOW);
+  printf("GIZMO_OLD: Total DM Part:  %" PRIu64 "\n", TOTAL_PARTICLES);
+  printf("GIZMO_OLD: ThisFile DM Part: %" PRIu64 "\n", npart[GIZMO_OLD_DM_PARTTYPE]);
+  printf("GIZMO_OLD: DM Part Mass:   %g Msun/h\n", PARTICLE_MASS);
+  printf("GIZMO_OLD: avgPartSpacing: %g Mpc/h\n\n", AVG_PARTICLE_SPACING);
   
-  if (!npart[GIZMO_DM_PARTTYPE]) {
+  if (!npart[GIZMO_OLD_DM_PARTTYPE]) {
     H5Fclose(HDF_FileID);
     printf("   SKIPPING FILE, PARTICLE COUNT ZERO.\n");
     return;
   }
 
-  int64_t to_read = npart[GIZMO_DM_PARTTYPE];
+  int64_t to_read = npart[GIZMO_OLD_DM_PARTTYPE];
   check_realloc_s(*p, ((*num_p)+to_read), sizeof(struct particle));
 
   // read IDs, pos, vel
   char buffer[100];
-  snprintf(buffer, 100, "PartType%"PRId64, GIZMO_DM_PARTTYPE);
+  snprintf(buffer, 100, "PartType%"PRId64, GIZMO_OLD_DM_PARTTYPE);
   gizmo_old_read_dataset(HDF_FileID, filename, buffer, "ParticleIDs", *p + (*num_p),
 	 to_read, (char *)&(p[0][0].id)-(char*)(p[0]), 1, H5T_NATIVE_LLONG);
   gizmo_old_read_dataset(HDF_FileID, filename, buffer, "Coordinates", *p + (*num_p),
@@ -225,7 +225,7 @@ void load_particles_gizmo_old(char *filename, struct particle **p, int64_t *num_
   
   gizmo_old_rescale_particles(*p, *num_p, to_read);
   
-  *num_p += npart[GIZMO_DM_PARTTYPE];
+  *num_p += npart[GIZMO_OLD_DM_PARTTYPE];
 }
 
 #endif /* ENABLE_HDF5 */
