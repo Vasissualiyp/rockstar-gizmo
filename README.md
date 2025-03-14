@@ -47,10 +47,23 @@ If you use the GNU C compiler version 4.0 or above on a 64-bit machine,
 compiling should be as simple as typing "`make`" at the command prompt.
 If you need HDF5 support to read in snapshots, use "`make with_hdf5`".
 
+Only things that are required to compile the code with hdf5 are `openmpi` 
+and `hdf5` modules, which you can load on your cluster, or install on
+your machine. 
+
 Rockstar does not support compiling on 32-bit machines and has not been
 tested with other compilers.  Additionally, Rockstar does not support
 non-Unix environments.  (Mac OS X is fine; Windows is not).
 
+### Compiling on Niagara ###
+
+In order to compile rockstar on Niagara, one will also have to install 
+`tirpc` library. There is a script to do that. After cloning this repo, 
+run:
+```
+./scripts/setup_tirpc.sh
+``` 
+That should set up everything automatically.
 ## Running ##
 
 1. ### Quick start (single snapshot, single CPU) ###
